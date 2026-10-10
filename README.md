@@ -17,7 +17,7 @@ Kotlin、Spring Boot、jOOQ、PostgreSQLで実装した書籍・著者管理用R
 | Java | 21 |
 | Kotlin | 2.1.21 |
 | Spring Boot | 3.5.16 |
-| Gradle Wrapper | 8.14.3 |
+| Gradle Wrapper | 9.4.1 |
 | PostgreSQL | 16 |
 | Flyway | 10（Dockerイメージ） |
 | jOOQ | 3.19.35（Spring Bootの依存管理） |
@@ -42,6 +42,8 @@ docker compose run --rm flyway
 ```
 
 起動後、APIは `http://localhost:8080` で利用できます。
+ブラウザでAPI仕様の確認とリクエスト実行を行う場合は、Swagger UI（ `http://localhost:8080/swagger-ui/index.html` ）
+を開いてください。OpenAPI JSONは `http://localhost:8080/v3/api-docs` で取得できます。
 
 停止する場合は以下を実行します。DBデータを残す場合は `down` のみ、DBデータも削除する場合は `down -v` を使用します。
 
