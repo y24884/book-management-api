@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: book-management-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/book_management}
+    username: ${DB_USERNAME:book_management}
+    password: ${DB_PASSWORD:book_management}
+  flyway:
+    enabled: true
+
+  jooq:
+    sql-dialect: POSTGRES

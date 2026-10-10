@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: book_management
+      POSTGRES_USER: book_management
+      POSTGRES_PASSWORD: book_management
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U book_management -d book_management"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway:
+    image: flyway/flyway:10-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/main/resources/db/migration:/flyway/sql:ro
+    command:
+      - -url=jdbc:postgresql://postgres:5432/book_management
+      - -user=book_management
+      - -password=book_management
+      - migrate
+
+volumes:
+  postgres-data:
