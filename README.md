@@ -22,6 +22,25 @@ Kotlin、Spring Boot、jOOQ、PostgreSQLで実装した書籍・著者管理用R
 | Flyway | 10（Dockerイメージ） |
 | jOOQ | 3.19.35（Spring Bootの依存管理） |
 
+## ディレクトリ構成
+
+```text
+src/
+├── main/
+│   ├── kotlin/com/example/bookmanagement/
+│   │   ├── controller/  # HTTPリクエスト・レスポンスを扱うAPI層
+│   │   ├── service/     # 業務ルールとトランザクションを扱う層
+│   │   ├── repository/  # jOOQのDSLContextでDBアクセスを行う層
+│   │   ├── dto/         # APIのリクエスト・レスポンス
+│   │   ├── model/       # ドメインモデルと出版状態
+│   │   ├── exception/   # APIエラーへの変換を含む例外処理
+│   │   └── config/      # ClockやOpenAPIなどの設定
+│   └── resources/
+│       └── db/migration/ # FlywayのDBマイグレーション
+├── test/kotlin/          # 単体テスト、Web層テスト、DB結合テスト
+└── functionalTest/kotlin/ # HTTPからPostgreSQLまで通すfunctionalテスト
+```
+
 ## 必要な実行環境
 
 - JDK 21
@@ -219,7 +238,7 @@ Dockerを起動した状態で、次のコマンドを実行します。
 ./gradlew check           # 上記を含む全検証とC1カバレッジ判定
 ```
 
-`clean build`の前に、上記の環境構築手順どおりPostgreSQLを起動しFlyway migrationを適用してください。jOOQ生成にはローカルPostgreSQL、Testcontainersによる結合テストにはDockerデーモンが必要です。
+上記コマンドの前に、環境構築手順どおりPostgreSQLを起動しFlyway migrationを適用してください。jOOQ生成にはローカルPostgreSQL、Testcontainersによる結合テストにはDockerデーモンが必要です。
 
 Web層・Service層の単体テストに加え、Testcontainersで起動する独立PostgreSQLを使った結合テストを実行します。結合テストでは、Flyway migration、著者・書籍・多対多関連、関連付け全置換、著者別一覧を検証します。
 
