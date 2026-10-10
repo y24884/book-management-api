@@ -18,10 +18,16 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
+/**
+ * 書籍と著者の多対多関連を管理するService。
+ *
+ * 書籍と中間テーブルを更新する操作は、関連付けの整合性を保つためトランザクションで実行する。
+ */
 class BookService(
     private val bookRepository: BookRepository,
     private val authorRepository: AuthorRepository,
 ) {
+    /** 著者の存在を検証して書籍と関連付けを登録する。 */
     @Transactional
     fun create(request: BookRequest): BookResponse {
         val authors = findRequiredAuthors(request.authorIds)
@@ -36,11 +42,17 @@ class BookService(
         return book.toResponse(authors)
     }
 
+    /** 指定IDの書籍と関連著者を取得する。 */
     fun get(bookId: Long): BookResponse {
         val book = bookRepository.findById(bookId) ?: throw BookNotFoundException(bookId)
         return book.toResponse(authorRepository.findByBookId(bookId))
     }
 
+    /**
+     * 書籍情報と著者の関連付けを全体更新する。
+     *
+     * [PublicationStatus.PUBLISHED]から[PublicationStatus.UNPUBLISHED]への遷移は許可しない。
+     */
     @Transactional
     fun update(bookId: Long, request: BookRequest): BookResponse {
         val currentBook = bookRepository.findByIdForUpdate(bookId) ?: throw BookNotFoundException(bookId)
@@ -59,6 +71,7 @@ class BookService(
         return updatedBook.toResponse(authors)
     }
 
+    /** 指定した著者に紐づく書籍を取得する。 */
     fun findByAuthorId(authorId: Long): List<BookResponse> {
         if (authorRepository.findById(authorId) == null) {
             throw AuthorNotFoundException(authorId)
@@ -68,6 +81,7 @@ class BookService(
         }
     }
 
+    /** 空集合および存在しない著者IDを拒否し、ID順に著者を返す。 */
     private fun findRequiredAuthors(authorIds: Set<Long>): List<Author> {
         if (authorIds.isEmpty()) {
             throw BookAuthorsRequiredException()
@@ -79,6 +93,7 @@ class BookService(
         return authors.sortedBy(Author::id)
     }
 
+    /** 出版済み書籍を未出版へ戻す遷移を拒否する。 */
     private fun validatePublicationStatusTransition(
         currentStatus: PublicationStatus,
         requestedStatus: PublicationStatus,

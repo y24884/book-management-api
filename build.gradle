@@ -4,6 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '2.1.21'
     id 'org.jetbrains.kotlin.plugin.spring' version '2.1.21'
     id 'nu.studer.jooq' version '9.0'
+    id 'jacoco'
 }
 
 group = 'com.example.bookmanagement'
@@ -37,6 +38,20 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     jooqGenerator 'org.postgresql:postgresql'
+}
+
+sourceSets {
+    functionalTest {
+        kotlin.srcDir 'src/functionalTest/kotlin'
+        resources.srcDir 'src/functionalTest/resources'
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    functionalTestImplementation.extendsFrom testImplementation
+    functionalTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 jooq {
@@ -76,4 +91,64 @@ jooq {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.register('functionalTest', Test) {
+    description = 'Runs functional tests against the HTTP API and a Testcontainers PostgreSQL database.'
+    group = 'verification'
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter tasks.named('test')
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, include: [
+            'com/example/bookmanagement/controller/**',
+            'com/example/bookmanagement/service/**',
+            'com/example/bookmanagement/repository/**',
+        ])
+    }))
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+    dependsOn tasks.named('jacocoTestReport')
+    // C1はHTTP／業務ルールの判断を担うController・Serviceを対象とする。
+    // Repositoryのnull防御はDBのNOT NULL制約違反を前提とし、通常の実行経路では到達しない。
+    classDirectories.setFrom(files(sourceSets.main.output.classesDirs.collect {
+        fileTree(dir: it, include: [
+            'com/example/bookmanagement/controller/**',
+            'com/example/bookmanagement/service/**',
+        ])
+    }))
+    violationRules {
+        rule {
+            element = 'CLASS'
+            includes = [
+                'com.example.bookmanagement.controller.*',
+                'com.example.bookmanagement.service.*',
+            ]
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 1.0
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestCoverageVerification')
+    dependsOn tasks.named('functionalTest')
 }

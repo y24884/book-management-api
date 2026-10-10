@@ -1,6 +1,7 @@
 package com.example.bookmanagement.service
 
 import com.example.bookmanagement.dto.AuthorRequest
+import com.example.bookmanagement.exception.AuthorNotFoundException
 import com.example.bookmanagement.exception.FutureBirthDateException
 import com.example.bookmanagement.model.Author
 import com.example.bookmanagement.repository.AuthorRepository
@@ -42,5 +43,34 @@ class AuthorServiceTest {
         }
 
         verifyNoInteractions(repository)
+    }
+
+    @Test
+    fun `returns not found when an author does not exist`() {
+        whenever(repository.findById(999)).thenReturn(null)
+
+        assertThrows(AuthorNotFoundException::class.java) {
+            service.get(999)
+        }
+    }
+
+    @Test
+    fun `gets an existing author`() {
+        val author = Author(1, "夏目漱石", LocalDate.of(1867, 2, 9))
+        whenever(repository.findById(author.id)).thenReturn(author)
+
+        val response = service.get(author.id)
+
+        assertEquals(author.name, response.name)
+    }
+
+    @Test
+    fun `returns not found when updating a missing author`() {
+        val request = AuthorRequest("夏目漱石", LocalDate.of(1867, 2, 9))
+        whenever(repository.update(999, request.name, request.birthDate)).thenReturn(null)
+
+        assertThrows(AuthorNotFoundException::class.java) {
+            service.update(999, request)
+        }
     }
 }

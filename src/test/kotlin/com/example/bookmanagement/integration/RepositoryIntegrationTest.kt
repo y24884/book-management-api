@@ -33,7 +33,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RepositoryIntegrationTest(
+class RepositoryIntegrationTest @Autowired constructor(
     @Autowired private val authorService: AuthorService,
     @Autowired private val bookService: BookService,
     @Autowired private val jdbcTemplate: JdbcTemplate,

@@ -2,7 +2,9 @@ package com.example.bookmanagement.service
 
 import com.example.bookmanagement.dto.BookRequest
 import com.example.bookmanagement.exception.AuthorsNotFoundException
+import com.example.bookmanagement.exception.AuthorNotFoundException
 import com.example.bookmanagement.exception.BookAuthorsRequiredException
+import com.example.bookmanagement.exception.BookNotFoundException
 import com.example.bookmanagement.exception.InvalidPublicationStatusTransitionException
 import com.example.bookmanagement.model.Author
 import com.example.bookmanagement.model.Book
@@ -36,6 +38,27 @@ class BookServiceTest {
 
         assertEquals(listOf(1L, 2L), response.authors.map { it.id })
         verify(bookRepository).replaceAuthors(1, setOf(1, 2))
+    }
+
+    @Test
+    fun `gets a book with its authors`() {
+        val book = Book(1, "吾輩は猫である", BigDecimal("1000"), PublicationStatus.UNPUBLISHED)
+        whenever(bookRepository.findById(book.id)).thenReturn(book)
+        whenever(authorRepository.findByBookId(book.id)).thenReturn(authors())
+
+        val response = service.get(book.id)
+
+        assertEquals(book.id, response.id)
+        assertEquals(listOf(1L, 2L), response.authors.map { it.id })
+    }
+
+    @Test
+    fun `returns not found when getting a missing book`() {
+        whenever(bookRepository.findById(999)).thenReturn(null)
+
+        assertThrows(BookNotFoundException::class.java) {
+            service.get(999)
+        }
     }
 
     @Test
@@ -88,6 +111,54 @@ class BookServiceTest {
         }
 
         verifyNoInteractions(authorRepository)
+    }
+
+    @Test
+    fun `returns not found when updating a book that no longer exists`() {
+        whenever(bookRepository.findByIdForUpdate(1)).thenReturn(null)
+
+        assertThrows(BookNotFoundException::class.java) {
+            service.update(1, request())
+        }
+    }
+
+    @Test
+    fun `returns not found when the updated book is not returned`() {
+        val request = request(authorIds = setOf(1))
+        whenever(bookRepository.findByIdForUpdate(1)).thenReturn(
+            Book(1, request.title, request.price, PublicationStatus.UNPUBLISHED),
+        )
+        whenever(authorRepository.findByIds(request.authorIds)).thenReturn(listOf(authors().first()))
+        whenever(bookRepository.update(1, request.title, request.price, request.publicationStatus)).thenReturn(null)
+
+        assertThrows(BookNotFoundException::class.java) {
+            service.update(1, request)
+        }
+    }
+
+    @Test
+    fun `returns not found when listing books for a missing author`() {
+        whenever(authorRepository.findById(999)).thenReturn(null)
+
+        assertThrows(AuthorNotFoundException::class.java) {
+            service.findByAuthorId(999)
+        }
+    }
+
+    @Test
+    fun `allows keeping a published book published`() {
+        val request = request(authorIds = setOf(1), publicationStatus = PublicationStatus.PUBLISHED)
+        whenever(bookRepository.findByIdForUpdate(1)).thenReturn(
+            Book(1, request.title, request.price, PublicationStatus.PUBLISHED),
+        )
+        whenever(authorRepository.findByIds(request.authorIds)).thenReturn(listOf(authors().first()))
+        whenever(bookRepository.update(1, request.title, request.price, request.publicationStatus)).thenReturn(
+            Book(1, request.title, request.price, request.publicationStatus),
+        )
+
+        val response = service.update(1, request)
+
+        assertEquals(PublicationStatus.PUBLISHED, response.publicationStatus)
     }
 
     private fun request(

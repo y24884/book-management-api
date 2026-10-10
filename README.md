@@ -214,12 +214,16 @@ PUTでは`authorIds`の内容で関連付け全体を置換します。
 Dockerを起動した状態で、次のコマンドを実行します。
 
 ```bash
-./gradlew clean build
+./gradlew test            # 単体テスト・Web層テスト・DB結合テスト
+./gradlew functionalTest  # HTTPからDBまでを通すfunctionalテスト
+./gradlew check           # 上記を含む全検証とC1カバレッジ判定
 ```
 
 `clean build`の前に、上記の環境構築手順どおりPostgreSQLを起動しFlyway migrationを適用してください。jOOQ生成にはローカルPostgreSQL、Testcontainersによる結合テストにはDockerデーモンが必要です。
 
 Web層・Service層の単体テストに加え、Testcontainersで起動する独立PostgreSQLを使った結合テストを実行します。結合テストでは、Flyway migration、著者・書籍・多対多関連、関連付け全置換、著者別一覧を検証します。
+
+functionalテストは`src/functionalTest/kotlin`に分離しています。ランダムポートで起動したアプリケーションにHTTPリクエストを送り、ControllerからService、jOOQ、PostgreSQLまでの一連の動作を検証します。
 
 また、テスト専用のPostgreSQLトリガーで`book_authors`の挿入エラーを発生させ、書籍更新と関連付け更新がともにロールバックされることを確認しています。テストメソッド自体にはトランザクションを付けていないため、ロールバック不備をテスト側で隠しません。
 

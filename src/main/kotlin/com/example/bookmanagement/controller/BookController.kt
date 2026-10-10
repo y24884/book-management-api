@@ -16,16 +16,24 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/books")
+/**
+ * 書籍の登録・取得・更新を公開するRESTコントローラ。
+ *
+ * 書籍と著者の関連付けや出版状態の遷移はService層に委譲する。
+ */
 class BookController(
     private val bookService: BookService,
 ) {
+    /** 著者との関連付けを含む書籍を登録する。 */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(@Valid @RequestBody request: BookRequest): BookResponse = bookService.create(request)
 
+    /** 指定IDの書籍と関連著者を取得する。 */
     @GetMapping("/{bookId}")
     fun get(@PathVariable bookId: Long): BookResponse = bookService.get(bookId)
 
+    /** 書籍情報と著者の関連付けを全体更新する。 */
     @PutMapping("/{bookId}")
     fun update(
         @PathVariable bookId: Long,
