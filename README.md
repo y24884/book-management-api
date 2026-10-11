@@ -54,7 +54,7 @@ Gradle本体を別途インストールする必要はありません。リポ�
 リポジトリ直下で以下を実行します。
 
 ```bash
-docker compose up -d postgres
+docker compose up -d postgres adminer
 docker compose run --rm flyway
 ./gradlew generateJooq
 ./gradlew bootRun
@@ -84,6 +84,22 @@ docker compose down
 | `JOOQ_DB_PASSWORD` | `book_management` |
 
 これらの既定値はローカル開発専用です。本番用の認証情報はリポジトリへ保存しません。
+
+### ローカルDBの確認（Adminer）
+
+`docker compose up -d postgres adminer` の後、`http://localhost:8081` を開くと、ブラウザでPostgreSQLのテーブルとデータを確認できます。Adminerはローカル開発用であり、本番環境へ公開しません。
+
+ログイン時は以下を入力します。
+
+| 項目 | 値 |
+|---|---|
+| システム | PostgreSQL |
+| サーバ | `postgres` |
+| ユーザ名 | `book_management` |
+| パスワード | `book_management` |
+| データベース | `book_management` |
+
+![img.png](img.png)
 
 ## FlywayとjOOQコード生成
 
