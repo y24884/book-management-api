@@ -83,12 +83,9 @@ docker compose down
 | `JOOQ_DB_USERNAME` | `book_management` |
 | `JOOQ_DB_PASSWORD` | `book_management` |
 
-これらの既定値はローカル開発専用です。本番用の認証情報はリポジトリへ保存しません。
-
 ### ローカルDBの確認（Adminer）
 
-`docker compose up -d postgres adminer` の後、`http://localhost:8081` を開くと、ブラウザでPostgreSQLのテーブルとデータを確認できます。Adminerはローカル開発用であり、本番環境へ公開しません。
-
+`docker compose up -d postgres adminer` の後、`http://localhost:8081` を開くと、ブラウザでPostgreSQLのテーブルとデータを確認できます。
 ログイン時は以下を入力します。
 
 | 項目 | 値 |
