@@ -72,6 +72,14 @@ class BookControllerTest(
     }
 
     @Test
+    fun `returns 400 when book ID is not numeric`() {
+        mockMvc.perform(get("/books/abc"))
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.message").value("Invalid request"))
+    }
+
+    @Test
     fun `updates a book`() {
         whenever(bookService.update(org.mockito.kotlin.any(), org.mockito.kotlin.any())).thenReturn(
             bookResponse(publicationStatus = PublicationStatus.PUBLISHED),

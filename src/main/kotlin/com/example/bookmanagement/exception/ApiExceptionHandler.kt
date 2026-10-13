@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
 class ApiExceptionHandler {
@@ -38,6 +39,10 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleUnreadableRequest(): ResponseEntity<ApiError> =
+        errorResponse(HttpStatus.BAD_REQUEST, "Invalid request")
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleArgumentTypeMismatch(): ResponseEntity<ApiError> =
         errorResponse(HttpStatus.BAD_REQUEST, "Invalid request")
 
     @ExceptionHandler(Exception::class)
